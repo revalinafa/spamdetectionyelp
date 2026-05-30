@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Yelp Review Predictor</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <div class="page-shell narrow">
+      <div class="card hero-card">
+        <p class="eyebrow">Spam Detection Demo</p>
+        <h1>Predict Review</h1>
+        <p class="hero-copy">
+          Paste a Yelp-style review and classify it as spam or not spam using
+          the trained model.
+        </p>
+      </div>
+
+      <div class="card form-card">
+        <form method="post" class="predict-form">
+          <label for="review_text">Review text</label>
+          <textarea
+            id="review_text"
+            name="review_text"
+            rows="10"
+            placeholder="Write a review here..."
+            required
+          >
+{{ review_text }}</textarea
+          >
+
+          <div class="button-row">
+            <button type="submit" class="primary-button">Check Review</button>
+            <a class="secondary-button" href="{{ url_for('home') }}"
+              >Back to Dashboard</a
+            >
+          </div>
+        </form>
+
+        {% if prediction %}
+        <div class="result-card">
+          <p class="result-label">Prediction</p>
+          <h2 class="result-value">{{ prediction }}</h2>
+          <p class="result-note">
+            This result comes directly from the trained model pipeline in
+            `reviewyelp.py`.
+          </p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </body>
+</html>

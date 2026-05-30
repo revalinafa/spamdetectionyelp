@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Yelp Review Spam Detection</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="nav-container">
+        <span class="nav-logo">?? Spam Detector AI</span>
+        <a href="#prediction" class="nav-cta">Try Now</a>
+      </div>
+    </nav>
+
+    <main class="container">
+      <!-- Hero Section -->
+      <section class="hero">
+        <div class="hero-content">
+          <h1 class="hero-title">Yelp Review Spam Detection</h1>
+          <p class="hero-subtitle">
+            AI-powered NLP classification system using Logistic Regression
+          </p>
+          <a href="#prediction" class="cta-button">Try Prediction ?</a>
+        </div>
+        <div class="hero-visual">
+          <div class="visual-blob blob-1"></div>
+          <div class="visual-blob blob-2"></div>
+        </div>
+      </section>
+
+      <!-- Dataset Overview -->
+      <section class="section">
+        <h2 class="section-title">Dataset Overview</h2>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">??</div>
+            <div class="stat-content">
+              <p class="stat-label">Total Reviews</p>
+              <p class="stat-value">{{ "{:,}".format(total_rows) }}</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">??</div>
+            <div class="stat-content">
+              <p class="stat-label">Avg Text Length</p>
+              <p class="stat-value">{{ avg_text_length }} chars</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">?</div>
+            <div class="stat-content">
+              <p class="stat-label">Not Spam</p>
+              <p class="stat-value">{{ "{:,}".format(not_spam_count) }}</p>
+              <p class="stat-meta">{{ not_spam_pct }}%</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">??</div>
+            <div class="stat-content">
+              <p class="stat-label">Spam</p>
+              <p class="stat-value">{{ "{:,}".format(spam_count) }}</p>
+              <p class="stat-meta">{{ spam_pct }}%</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Dataset Preview -->
+      <section class="section">
+        <h2 class="section-title">Dataset Preview</h2>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Review</th>
+                <th>Label</th>
+                <th>Length</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in preview_data %}
+              <tr>
+                <td class="text-cell">{{ row.text[:60] }}...</td>
+                <td>
+                  <span
+                    class="badge badge-{{ 'spam' if row.label == 1 else 'notspam' }}"
+                  >
+                    {{ row.label_text }}
+                  </span>
+                </td>
+                <td>{{ row.text_length }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Data Analysis -->
+      <section class="section">
+        <h2 class="section-title">Data Analysis</h2>
+        <div class="analysis-grid">
+          <div class="chart-card">
+            <h3>Label Distribution</h3>
+            <canvas id="labelChart"></canvas>
+          </div>
+          <div class="chart-card">
+            <h3>Text Length Distribution</h3>
+            <canvas id="lengthChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Preprocessing -->
+      <section class="section">
+        <h2 class="section-title">Text Preprocessing</h2>
+        <div class="preprocessing-grid">
+          <div class="preprocessing-card">
+            <h3>Original Text</h3>
+            <div class="code-block">{{ original_text }}</div>
+          </div>
+          <div class="preprocessing-card">
+            <h3>After Cleaning</h3>
+            <div class="code-block">{{ cleaned_text }}</div>
+          </div>
+        </div>
+        <div class="preprocessing-steps">
+          <h3>Processing Steps</h3>
+          <ul>
+            <li>? Lowercase normalization</li>
+            <li>? URL and number removal</li>
+            <li>? Punctuation stripping</li>
+            <li>? Whitespace cleanup</li>
+            <li>? TF-IDF vectorization</li>
+            <li>? SMOTE resampling</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Model Performance -->
+      <section class="section">
+        <h2 class="section-title">Model Performance</h2>
+        <div class="model-grid">
+          <div class="model-card">
+            <h3>Naive Bayes</h3>
+            <div class="accuracy-display">
+              <p class="accuracy-label">Accuracy</p>
+              <p class="accuracy-value">{{ nb_accuracy * 100 }}%</p>
+            </div>
+          </div>
+          <div class="model-card highlighted">
+            <h3>Logistic Regression</h3>
+            <div class="accuracy-display">
+              <p class="accuracy-label">Accuracy</p>
+              <p class="accuracy-value">{{ lr_accuracy * 100 }}%</p>
+              <p class="accuracy-badge">Selected Model</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="report-card">
+          <h3>Classification Report</h3>
+          <div class="report-box">
+            <pre>{{ lr_report }}</pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- Prediction Section -->
+      <section class="section prediction-section" id="prediction">
+        <h2 class="section-title">Try Prediction</h2>
+        <div class="prediction-card">
+          <form id="predictionForm" class="prediction-form">
+            <label for="reviewText">Review Text</label>
+            <textarea
+              id="reviewText"
+              name="text"
+              placeholder="Paste a review here... e.g., ''Great service and delicious food!''"
+              rows="6"
+              required
+            ></textarea>
+            <button type="submit" class="submit-button">Analyze Review</button>
+          </form>
+
+          <div
+            id="resultContainer"
+            class="result-container"
+            style="display: none"
+          >
+            <div class="result-card">
+              <p class="result-label">Prediction Result</p>
+              <div id="resultBadge" class="result-badge"></div>
+              <p id="resultNote" class="result-note"></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="footer">
+        <p>Built with Flask, scikit-learn, and ??</p>
+      </footer>
+    </main>
+
+    <script src="{{ url_for(''static'', filename=''script.js'') }}"></script>
+    <script>
+      // Initialize charts
+      const labelData = {
+        labels: ["Not Spam", "Spam"],
+        datasets: [
+          {
+            data: [{{ not_spam_count }}, {{ spam_count }}],
+            backgroundColor: ["#10b981", "#ef4444"],
+            borderColor: ["#059669", "#dc2626"],
+            borderWidth: 2,
+          },
+        ],
+      };
+
+      const lengthData = {
+        labels: {{ text_dist.labels | tojson }},
+        datasets: [
+          {
+            label: "Count",
+            data: {{ text_dist.values | tojson }},
+            backgroundColor: "#3b82f6",
+            borderColor: "#1e40af",
+            borderWidth: 1,
+          },
+        ],
+      };
+
+      // Pie chart for labels
+      new Chart(document.getElementById("labelChart"), {
+        type: "doughnut",
+        data: labelData,
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: "bottom" },
+          },
+        },
+      });
+
+      // Bar chart for text length
+      new Chart(document.getElementById("lengthChart"), {
+        type: "bar",
+        data: lengthData,
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+          },
+          scales: {
+            y: { beginAtZero: true },
+          },
+        },
+      });
+    </script>
+  </body>
+</html>
